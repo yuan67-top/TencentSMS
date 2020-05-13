@@ -38,7 +38,7 @@ public class SessionController {
 	public String reg(String phone,HttpServletRequest request) {
 		try {
 			phone.equals(null);
-			if(phone.trim()=="") {
+			if(phone.trim() == "") {
 				return "手机号不能为空";
 			}
 		}catch(Exception e) {
@@ -50,22 +50,22 @@ public class SessionController {
 		String verificationCode = beginIndex+endIndex;//生成验证码  前三位随机数+后三位毫秒值组成5到6位的验证码
 		
 		request.getSession().setAttribute(verificationCode, phone);
-//		request.getSession().setAttribute("phone", phone);
+		System.out.println(request.getSession().getAttribute(verificationCode));
 		try {
 			phone.equals(null);
 			SmsSingleSender ssender = new SmsSingleSender(sdk.getAppid(), sdk.getAppkey());
 			String[] params = {verificationCode,"5"};
 			SmsSingleSenderResult result = ssender.sendWithParam("86", phone,sdk.getTemplateId(), params, "聂强个人项目", "", "");
 			System.out.println(result);
-		} catch (HTTPException e) {
-			  // HTTP 响应码错误
-			  e.printStackTrace();
+		}  catch (HTTPException e) {
+			  // HTTP 响应码错误	e.printStackTrace();
+			return "网络出现异常";
 		} catch (JSONException e) {
-			  // JSON 解析错误
-			e.printStackTrace();
+			  // JSON 解析错误	e.printStackTrace();
+			return "解析出现异常";
 		} catch (IOException e) {
-			  // 网络 IO 错误
-			e.printStackTrace();
+			  // 网络 IO 错误	e.printStackTrace();
+			return "网络错误！";
 		}
 		
 		//清除时根据时间戳判断是不是这个任务对应的验证码
@@ -79,8 +79,8 @@ public class SessionController {
             }
         }), 5, TimeUnit.SECONDS);
 		
-		return "已成功发送验证码到:【"+request.getSession().getAttribute(phone)+"】"
-			+request.getSession().getAttribute(verificationCode)+">>>>"+request.getSession().getAttributeNames();
+		return "已成功发送验证码到:【"+verificationCode+"】"
+			+request.getSession().getAttribute(verificationCode)+">>>>";
 	}
 	
 	@GetMapping("/reg")
@@ -89,28 +89,26 @@ public class SessionController {
 		try {
 			phone.equals(null);
 			ver.equals(null);
-			if(phone.trim()=="") {
+			if((phone.trim()).equals(null) || (phone.trim()).equals("")) {
 				return "手机号不能为空";
 			}
 			if(ver.trim()=="") {
 				return "验证码不能为空";
 			}
 		}catch(Exception e) {
-			return "手机号不能为空";
+			return "手机号不能为空!";
 		}
-		String phoned = (String)request.getSession().getAttribute(phone);
-		System.out.println(phoned+"<<<");
-		if(!phone.equals(phoned)) {
-			return "该手机号验证码发送失败，请重新申请发送！";
+		String sessionPhone = (String) request.getSession().getAttribute(ver);
+		/**
+		 * 根据用户传过来的验证码作为键在session中进行查询
+		 * 如果查到的结果不为空 并且 用户输入的电话号(phone)与session中存的电话号(sessionPhone)匹配则该用户输入的电话号和验证码为正确的
+		 * 		此时删除session中的键值
+		 * 否则就是用户输入的手机号或验证码有误(验证码与手机号不对应)
+		 */
+		if(null != sessionPhone && phone.equals(sessionPhone)) {
+			request.getSession().removeAttribute(ver);
+			return "成功！手机号：【"+sessionPhone+"]"+"》》》》》验证码："+ver;
 		}
-		
-		if(phoned.equals(phone)) {
-			request.getSession().removeAttribute("verificationCode");
-			request.getSession().removeAttribute("phone");
-			return "验证码正确:"+ver+">>>手机号正确："+phone;
-		}else {
-			return "验证码错误和手机号不匹配！你输入的验证码为:"+ver+">>>你输入的手机号为："+phone+">>>>正确的应该是"+
-				phoned+"手机号匹配验证码"+phoned;
-		}
+		return "验证码错误和手机号不匹配！你输入的验证码为:"+ver+">>>你输入的手机号为："+phone;
 	}
 }

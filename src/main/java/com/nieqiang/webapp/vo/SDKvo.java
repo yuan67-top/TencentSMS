@@ -17,10 +17,10 @@ public class SDKvo {
 	 */
 	
 	// 短信模板 ID，需要在短信应用中申请    地址https://console.cloud.tencent.com/smsv2/csms-template
-	int templateId = 595329; // NOTE: 这里的模板 ID`7839`只是示例，真实的模板 ID 需要在短信控制台中申请
+	int templateId = 8; // NOTE: 这里的模板 ID`7839`只是示例，真实的模板 ID 需要在短信控制台中申请
 	
 	// 签名     获取地址https://console.cloud.tencent.com/smsv2/csms-sign
-	String smsSign = "个人项目"; // NOTE: 签名参数使用的是`签名内容`，而不是`签名ID`。这里的签名"腾讯云"只是示例，真实的签名需要在短信控制台申请
+	String smsSign = ""; // NOTE: 签名参数使用的是`签名内容`，而不是`签名ID`。这里的签名"腾讯云"只是示例，真实的签名需要在短信控制台申请
 
 	public int getAppid() {
 		return appid;

@@ -14,8 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -34,13 +32,11 @@ public class RedisController {
 	@Autowired
 	private RedisTemplate<String, String> redisTemplate;
 	
-	// redisTemplate.opsForValue().get("name");
-	//redisTemplate.opsForValue().set("name", name, 300,TimeUnit.SECONDS);
 	SDKvo sdk = new SDKvo();
 	ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10);
 	
 	@GetMapping("/getCode")
-	public String reg(String phone,HttpServletRequest request) {
+	public String reg(String phone) {
 		try {
 			phone.equals(null);
 			if(phone.trim()=="") {
@@ -77,7 +73,7 @@ public class RedisController {
 	}
 	
 	@GetMapping("/reg")
-	public String login(HttpServletRequest request,String phone,String ver) {
+	public String login(String phone,String ver) {
 		try {
 			phone.equals(null);
 			ver.equals(null);
@@ -91,15 +87,19 @@ public class RedisController {
 			return "手机号或验证码不能为空";
 		}
 
-		String phoned = redisTemplate.opsForValue().get(ver);//值：手机号
-		
-		System.out.println(phone+"<<<");
-		
-		if(phoned != null) {
+		/**
+		 * 根据用户传过来的验证码作为键在redis中进行查询,查询结果为redisPhone
+		 * 如果查到的结果不为空 并且 用户输入的电话号(phone)与redis中存的电话号(redisPhone)匹配则该用户输入的电话号和验证码为正确的
+		 * 		此时删除redis中的键值
+		 * 否则就是用户输入的手机号或验证码有误(验证码与手机号不对应)
+		 */
+		String redisPhone = redisTemplate.opsForValue().get(ver);//值：手机号
+		if(redisPhone != null && phone.equals(redisPhone)) {
 			redisTemplate.delete(ver);
-			return "验证码正确:"+ver+">>>手机号正确："+phone;
-		}else {
-			return "验证码错误和手机号不匹配！";
+			return "验证码正确:"+ver+">>>手机号正确："+redisPhone;
 		}
+//		return "验证码错误和手机号不匹配！";
+		return "验证码错误和手机号不匹配！你输入的验证码为:"+ver+">>>你输入的手机号为："+phone+">>>>正确的应该是"+
+		redisPhone;
 	}
 }
